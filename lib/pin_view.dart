@@ -3,13 +3,6 @@ library pin_view;
 import 'package:flutter/material.dart';
 import 'package:sms_autofill/sms_autofill.dart';
 
-class SmsListener {
-  final String from;
-  final Function formatBody;
-
-  SmsListener({@required this.from, this.formatBody});
-}
-
 class PinView extends StatefulWidget {
   final Function submit;
   final int count;
@@ -17,7 +10,7 @@ class PinView extends StatefulWidget {
   final bool autoFocusFirstField;
   final bool enabled;
   final List<int> dashPositions;
-  final SmsListener sms;
+  final bool listenSms;
   final TextStyle style;
   final TextStyle dashStyle;
   final InputDecoration inputDecoration;
@@ -30,7 +23,7 @@ class PinView extends StatefulWidget {
       this.autoFocusFirstField: true,
       this.enabled: true,
       this.dashPositions: const [],
-      this.sms,
+      this.listenSms,
       this.dashStyle: const TextStyle(fontSize: 30.0, color: Colors.grey),
       this.style: const TextStyle(
         fontSize: 20.0,
@@ -52,7 +45,7 @@ class _PinViewState extends State<PinView> {
   @override
   void initState() {
     super.initState();
-    if (widget.sms != null) {
+    if (widget.listenSms) {
       _listenSms();
     }
     _pin = List<String>.generate(widget.count, (int index) => "");
@@ -65,20 +58,13 @@ class _PinViewState extends State<PinView> {
   void _listenSms() async {
     SmsAutoFill().listenForCode;
     SmsAutoFill().code.listen((code) {
-      print(code);
-    });
-    // _smsReceiver = SmsReceiver();
-    // _smsReceiver.onSmsReceived.listen((SmsMessage message) {
-    //   String code = widget.sms.formatBody != null
-    //       ? widget.sms.formatBody(message.body)
-    //       : message.body;
-    //   for (TextEditingController controller in _controllers) {
-    //     controller.text = code[_controllers.indexOf(controller)];
-    //     _pin[_controllers.indexOf(controller)] = controller.text;
-    //   }
+      for (TextEditingController controller in _controllers) {
+        controller.text = code[_controllers.indexOf(controller)];
+        _pin[_controllers.indexOf(controller)] = controller.text;
+      }
 
-    //   widget.submit(_pin.join());
-    // });
+      widget.submit(_pin.join());
+    });
   }
 
   Widget _dash() {
